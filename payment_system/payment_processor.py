@@ -6,6 +6,7 @@ from payment_system.bank import Bank
 from utils.transaction import Transaction, TransactionStatus
 from utils.logger import LOGGER
 
+import queue
 
 class PaymentProcessor(Thread):
     """
@@ -44,12 +45,12 @@ class PaymentProcessor(Thread):
         # TODO: IMPLEMENTE/MODIFIQUE O CÓDIGO NECESSÁRIO ABAIXO !
 
         LOGGER.info(f"Inicializado o PaymentProcessor {self._id} do Banco {self.bank._id}!")
-        queue = banks[self.bank._id].transaction_queue
+        trans_queue = banks[self.bank._id].transaction_queue
 
         while True:
             try:
-                transaction = queue.pop()
-                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {queue}")
+                transaction = trans_queue.get()
+                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {list(trans_queue.queue)}")
             except Exception as err:
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
             else:

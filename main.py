@@ -62,23 +62,43 @@ if __name__ == "__main__":
         banks.append(bank)
 
     # Inicializa gerador de transações e processadores de pagamentos para os Bancos Nacionais:
+    n = 10
+    TransGens = []
+    PayProcs = []
+
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
-        TransactionGenerator(_id=i, bank=bank).start()
+        tg = TransactionGenerator(_id=i, bank=bank)
+        TransGens.append(tg)
+        # Inicializa um PaymentProcessor thread por banco.
+        for j in range(n):
+            pp = PaymentProcessor(_id=(n*i+j), bank=bank)
+            PayProcs.append(pp)
+
+    for i, bank in enumerate(banks):
+        # Inicializa um TransactionGenerator thread por banco:
+        TransGens[i].start()
         # Inicializa um PaymentProcessor thread por banco.
         # Sua solução completa deverá funcionar corretamente com múltiplos PaymentProcessor threads para cada banco.
-        PaymentProcessor(_id=i, bank=bank).start()
-        
+        for j in range(n):
+            PayProcs[n*i+j].start()
+
     # Enquanto o tempo total de simuação não for atingido:
     while t < total_time:
         dt = randint(0, 3)
         time.sleep(dt * time_unit)
-
-        # Atualiza a variável tempo considerando o intervalo de criação dos clientes:
         t += dt
 
     # Finaliza todas as threads
-    # TODO
+    for i, bank in enumerate(banks):
+        # Finalizando os TransactionGenerators
+        TransGens[i].join()
+        # Finalizando os PaymentProcessors
+        for j in range(n):
+            PayProcs[n*i+j].join()
 
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")
+
+    for i, bank in enumerate(banks):
+        bank.info()

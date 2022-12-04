@@ -5,6 +5,7 @@ from utils.transaction import Transaction
 from utils.currency import Currency
 from utils.logger import LOGGER
 
+import queue
 
 class Bank():
     """
@@ -45,7 +46,7 @@ class Bank():
         self.reserves           = CurrencyReserves()
         self.operating          = False
         self.accounts           = []
-        self.transaction_queue  = []
+        self.transaction_queue  = queue.Queue()
 
 
     def new_account(self, balance: int = 0, overdraft_limit: int = 0) -> None:
@@ -64,6 +65,9 @@ class Bank():
         # Adiciona a Account criada na lista de contas do banco
         self.accounts.append(acc)
 
+    def new_transfer(origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> None:
+        # Implementar
+        return
 
     def info(self) -> None:
         """

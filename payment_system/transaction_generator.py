@@ -8,6 +8,7 @@ from utils.transaction import Transaction
 from utils.currency import Currency
 from utils.logger import LOGGER
 
+import queue
 
 class TransactionGenerator(Thread):
     """
@@ -53,7 +54,7 @@ class TransactionGenerator(Thread):
             destination = (destination_bank, randint(0, 100))
             amount = randint(100, 1000000)
             new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
-            banks[self.bank._id].transaction_queue.append(new_transaction)
+            banks[self.bank._id].transaction_queue.put(new_transaction)
             i=+1
             time.sleep(0.2 * time_unit)
 
