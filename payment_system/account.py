@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from utils.currency import Currency
 from utils.logger import LOGGER
 
+from threading import Lock
 
 @dataclass
 class Account:
@@ -20,6 +21,8 @@ class Account:
         Identificador do banco no qual a conta bancária foi criada.
     currency : Currency
         Moeda corrente da conta bancária.
+    account_lock: Lock
+        Mutex que impede que duas ou mais threads modifiquem o saldo ao mesmo tempo
     balance : int
         Saldo da conta bancária.
     overdraft_limit : int
@@ -38,6 +41,7 @@ class Account:
     _id: int
     _bank_id: int
     currency: Currency
+    account_lock: Lock
     balance: int = 0
     overdraft_limit: int = 0
 
@@ -47,9 +51,13 @@ class Account:
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES, SE NECESSÁRIAS, NESTE MÉTODO!
 
+        self.account_lock.acquire()
+
         pretty_balance = f"{format(round(self.balance/100), ',d')}.{self.balance%100:02d} {self.currency.name}"
         pretty_overdraft_limit = f"{format(round(self.overdraft_limit/100), ',d')}.{self.overdraft_limit%100:02d} {self.currency.name}"
         LOGGER.info(f"Account::{{ _id={self._id}, _bank_id={self._bank_id}, balance={pretty_balance}, overdraft_limit={pretty_overdraft_limit} }}")
+
+        self.account_lock.release()
 
 
     def deposit(self, amount: int) -> bool:
@@ -60,8 +68,13 @@ class Account:
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES NECESSÁRIAS NESTE MÉTODO !
 
+        self.account_lock.acquire()
+
         self.balance += amount
         LOGGER.info(f"deposit({amount}) successful!")
+
+        self.account_lock.release()
+
         return True
 
 
@@ -74,18 +87,23 @@ class Account:
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES NECESSÁRIAS NESTE MÉTODO !
 
+        self.account_lock.acquire()
+
         if self.balance >= amount:
             self.balance -= amount
             LOGGER.info(f"withdraw({amount}) successful!")
+            self.account_lock.release()
             return True
         else:
             overdrafted_amount = abs(self.balance - amount)
             if self.overdraft_limit >= overdrafted_amount:
                 self.balance -= amount
                 LOGGER.info(f"withdraw({amount}) successful with overdraft!")
+                self.account_lock.release()
                 return True
             else:
                 LOGGER.warning(f"withdraw({amount}) failed, no balance!")
+                self.account_lock.release()
                 return False
 
 
