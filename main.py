@@ -97,6 +97,9 @@ if __name__ == "__main__":
         for j in range(n):
             PayProcs[n*i+j].join()
 
+    for i, bank in enumerate(banks):
+        bank.operating = False
+
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")
 

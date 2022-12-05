@@ -47,7 +47,7 @@ class PaymentProcessor(Thread):
         LOGGER.info(f"Inicializado o PaymentProcessor {self._id} do Banco {self.bank._id}!")
         trans_queue = banks[self.bank._id].transaction_queue
 
-        while True:
+        while banks[self.bank._id].operating :
             try:
                 transaction = trans_queue.get()
                 LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {list(trans_queue.queue)}")
@@ -55,7 +55,6 @@ class PaymentProcessor(Thread):
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
             else:
                 self.process_transaction(transaction)
-            time.sleep(3 * time_unit)  # Remova esse sleep após implementar sua solução!
 
         LOGGER.info(f"O PaymentProcessor {self._id} do banco {self._bank_id} foi finalizado.")
 
@@ -71,10 +70,21 @@ class PaymentProcessor(Thread):
         # TODO: IMPLEMENTE/MODIFIQUE O CÓDIGO NECESSÁRIO ABAIXO !
 
         LOGGER.info(f"PaymentProcessor {self._id} do Banco {self.bank._id} iniciando processamento da Transaction {transaction._id}!")
-        
+
+        result = False
+
+        if transaction.origin[0] != transaction.destination[0] :
+            result = banks[self.bank._id].new_inter_transfer(transaction.origin, transaction.destination, transaction.amount, transaction.currency)
+        else:
+            result = banks[self.bank._id].new_ncnl_transfer(transaction.origin, transaction.destination, transaction.amount, transaction.currency)
+
         # NÃO REMOVA ESSE SLEEP!
         # Ele simula uma latência de processamento para a transação.
         time.sleep(3 * time_unit)
+
+        if result == False :
+            transaction.set_status(TransactionStatus.FAILED)
+            return transaction.status
 
         transaction.set_status(TransactionStatus.SUCCESSFUL)
         return transaction.status

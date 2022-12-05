@@ -34,14 +34,14 @@ class Account:
         Printa informações sobre a conta bancária.
     deposit(amount: int) -> None:
         Adiciona o valor `amount` ao saldo da conta bancária.
-    withdraw(amount: int) -> None:
+    withdraw(amount: int) -> list[bool, int]:
         Remove o valor `amount` do saldo da conta bancária.
     """
 
     _id: int
     _bank_id: int
     currency: Currency
-    account_lock: Lock
+    account_lock: Lock = Lock()
     balance: int = 0
     overdraft_limit: int = 0
 
@@ -78,7 +78,7 @@ class Account:
         return True
 
 
-    def withdraw(self, amount: int) -> bool:
+    def withdraw(self, amount: int) -> list[bool, int]:
         """
         Esse método deverá retirar o valor `amount` especificado do saldo da conta bancária (`balance`).
         Deverá ser retornado um valor bool indicando se foi possível ou não realizar a retirada.
@@ -87,24 +87,29 @@ class Account:
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES NECESSÁRIAS NESTE MÉTODO !
 
+        result = [False, 0]
+
         self.account_lock.acquire()
 
         if self.balance >= amount:
             self.balance -= amount
+            result = [True, 0]
             LOGGER.info(f"withdraw({amount}) successful!")
             self.account_lock.release()
-            return True
+            return result
         else:
             overdrafted_amount = abs(self.balance - amount)
             if self.overdraft_limit >= overdrafted_amount:
                 self.balance -= amount
+                result = [True, overdrafted_amount]
                 LOGGER.info(f"withdraw({amount}) successful with overdraft!")
                 self.account_lock.release()
-                return True
+                return result
             else:
+                result = [False, 0]
                 LOGGER.warning(f"withdraw({amount}) failed, no balance!")
                 self.account_lock.release()
-                return False
+                return result
 
 
 @dataclass
