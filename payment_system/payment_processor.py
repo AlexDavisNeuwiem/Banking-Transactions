@@ -1,5 +1,5 @@
 import time
-from threading import Thread
+from threading import Thread, Lock, Semaphore
 
 from globals import *
 from payment_system.bank import Bank
@@ -49,8 +49,11 @@ class PaymentProcessor(Thread):
 
         while banks[self.bank._id].operating :
             try:
+                banks[self.bank._id].queue_sem.acquire()
+                banks[self.bank._id].queue_lock.acquire()
                 transaction = trans_queue.get()
                 LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {list(trans_queue.queue)}")
+                banks[self.bank._id].queue_lock.release()
             except Exception as err:
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
             else:

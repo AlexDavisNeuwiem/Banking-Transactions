@@ -1,6 +1,6 @@
 from random import randint
 import time
-from threading import Thread
+from threading import Thread, Semaphore
 
 from globals import *
 from payment_system.bank import Bank
@@ -47,22 +47,19 @@ class TransactionGenerator(Thread):
 
         i = 0
         while banks[self.bank._id].operating :
-            orig_balance = randint(100, 1000000)
-            orig_over_lim = randint(100, 1000000)
-            banks[self.bank._id].new_account(banks[self.bank._id], orig_balance, orig_over_lim)
-            orig_account = banks[self.bank._id].accounts[-1]._id
+            orig_posit = randint(len(banks[self.bank._id].accounts))
+            orig_account = banks[self.bank._id].accounts[orig_posit]._id
             origin = (self.bank._id, orig_account)
 
             destination_bank = randint(0, 5)
-            dest_balance = randint(100, 1000000)
-            dest_over_lim = randint(100, 1000000)
-            banks[destination_bank].new_account(banks[destination_bank], dest_balance, dest_over_lim)
-            dest_account = banks[destination_bank].accounts[-1]._id
+            dest_posit = randint(len(banks[destination_bank].accounts))
+            dest_account = banks[destination_bank].accounts[dest_posit]._id
             destination = (destination_bank, dest_account)
 
             amount = randint(100, 1000000)
             new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
             banks[self.bank._id].transaction_queue.put(new_transaction)
+            banks[self.bank._id].queue_sem.release()
             i += 1
             time.sleep(0.2 * time_unit)
 

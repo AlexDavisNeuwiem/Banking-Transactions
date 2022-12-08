@@ -1,4 +1,5 @@
 from typing import Tuple
+from threading import Thread, Lock, Semaphore
 
 from globals import *
 from payment_system.account import Account, CurrencyReserves
@@ -57,6 +58,8 @@ class Bank():
         self.lucro              = 0
         self.ncnl               = 0
         self.inter              = 0
+        self.queue_sem          = Semaphore(0)
+        self.queue_lock         = Lock()
 
 
     def new_account(self, balance: int = 0, overdraft_limit: int = 0) -> None:

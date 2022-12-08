@@ -61,6 +61,14 @@ if __name__ == "__main__":
         # Adiciona banco na lista global de bancos
         banks.append(bank)
 
+    # Cria m contas em cada banco
+    m = 50
+    for i, bank in enumerate(banks):
+        for j in range(m):
+            new_balance = randint(100, 1000000)
+            new_over_lim = randint(100, 1000000)
+            bank.new_account(bank, new_balance, new_over_lim)
+
     # Inicializa gerador de transações e processadores de pagamentos para os Bancos Nacionais:
     n = 10
     TransGens = []
