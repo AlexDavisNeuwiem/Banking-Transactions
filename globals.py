@@ -9,9 +9,6 @@ debug = False
 # Armazena a quantidade de Payment_Processors que não finalizaram
 not_finalized = 0
 
-# Lock que bloqueia acesso à variável "not_finalized"
-not_fin_lock = Lock()
-
 # Tempo total de simulação
 total_time = 1000
 
