@@ -73,7 +73,7 @@ if __name__ == "__main__":
     n_proc = 20
     TransGens = []
     PayProcs = []
-    not_finalized = n_proc
+    not_finalized = 6*n_proc
 
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
