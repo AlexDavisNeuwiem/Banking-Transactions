@@ -48,6 +48,8 @@ class PaymentProcessor(Thread):
         while banks[self.bank._id].operating :
             try:
                 banks[self.bank._id].queue_sem.acquire()
+                if not(banks[self.bank._id].operating) :
+                    break
                 banks[self.bank._id].queue_lock.acquire()
                 transaction = trans_queue.pop(0)
                 LOGGER.info(f"Transaction_queue do Banco {self.bank._id}:")
@@ -61,7 +63,7 @@ class PaymentProcessor(Thread):
             else:
                 self.process_transaction(transaction)
 
-        LOGGER.info(f"O PaymentProcessor {self._id} do banco {self._bank_id} foi finalizado.")
+        LOGGER.info(f"O PaymentProcessor {self._id} do banco {self.bank._id} foi finalizado.")
 
 
     def process_transaction(self, transaction: Transaction) -> TransactionStatus:

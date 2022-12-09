@@ -97,6 +97,9 @@ if __name__ == "__main__":
         time.sleep(dt * time_unit)
         t += dt
 
+    for i, bank in enumerate(banks):
+        bank.operating = False
+
     # Finaliza todas as threads
     for i, bank in enumerate(banks):
         # Finalizando os TransactionGenerators
@@ -104,9 +107,6 @@ if __name__ == "__main__":
         # Finalizando os PaymentProcessors
         for j in range(n):
             PayProcs[n*i+j].join()
-
-    for i, bank in enumerate(banks):
-        bank.operating = False
 
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")
