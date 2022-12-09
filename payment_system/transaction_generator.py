@@ -47,12 +47,12 @@ class TransactionGenerator(Thread):
 
         i = 0
         while banks[self.bank._id].operating :
-            orig_posit = randint(len(banks[self.bank._id].accounts))
+            orig_posit = randint(0, len(banks[self.bank._id].accounts) - 1)
             orig_account = banks[self.bank._id].accounts[orig_posit]._id
             origin = (self.bank._id, orig_account)
 
             destination_bank = randint(0, 5)
-            dest_posit = randint(len(banks[destination_bank].accounts))
+            dest_posit = randint(0, len(banks[destination_bank].accounts) - 1)
             dest_account = banks[destination_bank].accounts[dest_posit]._id
             destination = (destination_bank, dest_account)
 

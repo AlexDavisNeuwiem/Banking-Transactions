@@ -2,7 +2,7 @@
 banks = []
 
 # Printar Logs de DEBUG no console?
-debug = False
+debug = True
 
 # Tempo total de simulação
 total_time = 1000

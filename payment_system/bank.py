@@ -4,7 +4,7 @@ from threading import Thread, Lock, RLock, Semaphore
 from globals import *
 from payment_system.account import Account, CurrencyReserves
 from utils.transaction import Transaction
-from utils.currency import Currency
+from utils.currency import *
 from utils.logger import LOGGER
 
 import queue
@@ -85,20 +85,20 @@ class Bank():
         # Adiciona a Account criada na lista de contas do banco
         self.accounts.append(acc)
 
-    def new_ncnl_transfer(origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-        result = banks[origin[0]].accounts[origin[1]].withdraw(banks[origin[0]].accounts[origin[1]], amount)
+    def new_ncnl_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
+        result = banks[origin[0]].accounts[origin[1]].withdraw(amount)
         if result[0] == False :
             return False
         banks[origin[0]].profit_lock.acquire()
         banks[origin[0]].profit += 0.05*result[1]
         banks[origin[0]].profit_lock.release()
-        banks[destination[0]].accounts[destination[1]].deposit(banks[destination[0]].accounts[destination[1]], amount)
+        banks[destination[0]].accounts[destination[1]].deposit(amount)
         banks[origin[0]].ncnl_lock.acquire()
         banks[origin[0]].ncnl += 1
         banks[origin[0]].ncnl_lock.release()
         return True
 
-    def new_inter_transfer(origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
+    def new_inter_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
 
             """
             - Sou conta BRL e quero transferir 200 USD para uma conta externa
@@ -111,7 +111,7 @@ class Bank():
             """
 
             # Convertendo as moedas
-            exchange_rate = banks[origin[0]].currency.get_exchange_rate(banks[origin[0]].currency, banks[destination[0]].currency)
+            exchange_rate = get_exchange_rate(banks[origin[0]].currency, banks[destination[0]].currency)
 
             # Calculando o valor com taxa de câmbio
             new_amount = amount*exchange_rate + 0.01*amount*exchange_rate
@@ -179,7 +179,7 @@ class Bank():
                     return False
 
             # Retirando o valor com taxa de câmbio da conta origem
-            result = banks[origin[0]].accounts[origin[1]].withdraw(banks[origin[0]].accounts[origin[1]], new_amount)
+            result = banks[origin[0]].accounts[origin[1]].withdraw(new_amount)
             # Unlock em todas as contas que fizeram Lock
             banks[origin[0]].accounts[origin[1]].account_lock.release()
 
@@ -189,62 +189,62 @@ class Bank():
 
             # Depositando o valor com taxa de câmbio na conta especial de moeda origem
             if banks[origin[0]].currency == 1 :
-                banks[origin[0]].reserves.USD.deposit(banks[origin[0]].reserves.USD, new_amount)
+                banks[origin[0]].reserves.USD.deposit(new_amount)
                 
             elif banks[origin[0]].currency == 2 :
-                banks[origin[0]].reserves.EUR.deposit(banks[origin[0]].reserves.EUR, new_amount)
+                banks[origin[0]].reserves.EUR.deposit(new_amount)
                 
             elif banks[origin[0]].currency == 3 :
-                banks[origin[0]].reserves.GBP.deposit(banks[origin[0]].reserves.GBP, new_amount)
+                banks[origin[0]].reserves.GBP.deposit(new_amount)
 
             elif banks[origin[0]].currency == 4 :
-                banks[origin[0]].reserves.JPY.deposit(banks[origin[0]].reserves.JPY, new_amount)
+                banks[origin[0]].reserves.JPY.deposit(new_amount)
                 
             elif banks[origin[0]].currency == 5 :
-                banks[origin[0]].reserves.CHF.deposit(banks[origin[0]].reserves.CHF, new_amount)
+                banks[origin[0]].reserves.CHF.deposit(new_amount)
                 
             else:
-                banks[origin[0]].reserves.BRL.deposit(banks[origin[0]].reserves.BRL, new_amount)
+                banks[origin[0]].reserves.BRL.deposit(new_amount)
 
             # Retirando o valor sem taxa de cãmbio da conta especial de moeda destino
             if banks[destination[0]].currency == 1 :
-                result = banks[origin[0]].reserves.USD.withdraw(banks[origin[0]].reserves.USD, amount)
+                result = banks[origin[0]].reserves.USD.withdraw(amount)
                 banks[origin[0]].reserves.USD.account_lock.release()
                 fixing = 0.05*result[1]
-                banks[origin[0]].reserves.USD.deposit(banks[origin[0]].reserves.USD, fixing)
+                banks[origin[0]].reserves.USD.deposit(fixing)
                 
             elif banks[destination[0]].currency == 2 :
-                result = banks[origin[0]].reserves.EUR.withdraw(banks[origin[0]].reserves.EUR, amount)
+                result = banks[origin[0]].reserves.EUR.withdraw(amount)
                 banks[origin[0]].reserves.EUR.account_lock.release()
                 fixing = 0.05*result[1]
-                banks[origin[0]].reserves.EUR.deposit(banks[origin[0]].reserves.EUR, fixing)
+                banks[origin[0]].reserves.EUR.deposit(fixing)
                 
             elif banks[destination[0]].currency == 3 :
-                result = banks[origin[0]].reserves.GBP.withdraw(banks[origin[0]].reserves.GBP, amount)
+                result = banks[origin[0]].reserves.GBP.withdraw(amount)
                 banks[origin[0]].reserves.GBP.account_lock.release()
                 fixing = 0.05*result[1]
-                banks[origin[0]].reserves.GBP.deposit(banks[origin[0]].reserves.GBP, fixing)
+                banks[origin[0]].reserves.GBP.deposit(fixing)
 
             elif banks[destination[0]].currency == 4 :
-                result = banks[origin[0]].reserves.JPY.withdraw(banks[origin[0]].reserves.JPY, amount)
+                result = banks[origin[0]].reserves.JPY.withdraw(amount)
                 banks[origin[0]].reserves.JPY.account_lock.release()
                 fixing = 0.05*result[1]
-                banks[origin[0]].reserves.JPY.deposit(banks[origin[0]].reserves.JPY, fixing)
+                banks[origin[0]].reserves.JPY.deposit(fixing)
                 
             elif banks[destination[0]].currency == 5 :
-                result = banks[origin[0]].reserves.CHF.withdraw(banks[origin[0]].reserves.CHF, amount)
+                result = banks[origin[0]].reserves.CHF.withdraw(amount)
                 banks[origin[0]].reserves.CHF.account_lock.release()
                 fixing = 0.05*result[1]
-                banks[origin[0]].reserves.CHF.deposit(banks[origin[0]].reserves.CHF, fixing)
+                banks[origin[0]].reserves.CHF.deposit(fixing)
                 
             else:
-                result = banks[origin[0]].reserves.BRL.withdraw(banks[origin[0]].reserves.BRL, amount)
+                result = banks[origin[0]].reserves.BRL.withdraw(amount)
                 banks[origin[0]].reserves.BRL.account_lock.release()
                 fixing = 0.05*result[1]
-                banks[origin[0]].reserves.BRL.deposit(banks[origin[0]].reserves.BRL, fixing)
+                banks[origin[0]].reserves.BRL.deposit(fixing)
             
             # Depositando o valor sem taxa de câmbio na conta destino
-            banks[destination[0]].accounts[destination[1]].deposit(banks[destination[0]].accounts[destination[1]], amount)
+            banks[destination[0]].accounts[destination[1]].deposit(amount)
 
             banks[origin[0]].inter_lock.acquire()
             banks[origin[0]].inter += 1
