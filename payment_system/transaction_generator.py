@@ -43,6 +43,8 @@ class TransactionGenerator(Thread):
 
         LOGGER.info(f"Inicializado TransactionGenerator para o Banco Nacional {self.bank._id}!")
 
+        global not_finalized
+        
         i = 0
         while banks[self.bank._id].operating :
             orig_posit = randint(0, len(banks[self.bank._id].accounts) - 1)
@@ -63,5 +65,7 @@ class TransactionGenerator(Thread):
             i += 1
             time.sleep(0.2 * time_unit)
         # Dar release em todos os semáforos
+        for i in range (not_finalized) :
+            banks[self.bank._id].queue_sem.release()
         LOGGER.info(f"O TransactionGenerator {self._id} do banco {self.bank._id} foi finalizado.")
 

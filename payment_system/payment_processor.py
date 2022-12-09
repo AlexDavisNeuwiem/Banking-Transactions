@@ -45,6 +45,8 @@ class PaymentProcessor(Thread):
         LOGGER.info(f"Inicializado o PaymentProcessor {self._id} do Banco {self.bank._id}!")
         trans_queue = banks[self.bank._id].transaction_queue
 
+        global not_finalized
+
         while banks[self.bank._id].operating :
             try:
                 banks[self.bank._id].queue_sem.acquire()
@@ -63,6 +65,9 @@ class PaymentProcessor(Thread):
             else:
                 self.process_transaction(transaction)
 
+        not_fin_lock.acquire()
+        not_finalized = not_finalized - 1
+        not_fin_lock.release()
         LOGGER.info(f"O PaymentProcessor {self._id} do banco {self.bank._id} foi finalizado.")
 
 

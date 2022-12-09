@@ -62,25 +62,26 @@ if __name__ == "__main__":
         banks.append(bank)
 
     # Cria m contas em cada banco
-    m = 10
+    n_acc = 10
     for i, bank in enumerate(banks):
-        for j in range(m):
+        for j in range(n_acc):
             new_balance = randint(100, 1000000)
             new_over_lim = randint(100, 1000000)
             bank.new_account(new_balance, new_over_lim)
 
     # Inicializa gerador de transações e processadores de pagamentos para os Bancos Nacionais:
-    n = 20
+    n_proc = 20
     TransGens = []
     PayProcs = []
+    not_finalized = n_proc
 
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
         tg = TransactionGenerator(_id=i, bank=bank)
         TransGens.append(tg)
         # Inicializa um PaymentProcessor thread por banco.
-        for j in range(n):
-            pp = PaymentProcessor(_id=(n*i+j), bank=bank)
+        for j in range(n_proc):
+            pp = PaymentProcessor(_id=(n_proc*i+j), bank=bank)
             PayProcs.append(pp)
 
     for i, bank in enumerate(banks):
@@ -88,8 +89,8 @@ if __name__ == "__main__":
         TransGens[i].start()
         # Inicializa um PaymentProcessor thread por banco.
         # Sua solução completa deverá funcionar corretamente com múltiplos PaymentProcessor threads para cada banco.
-        for j in range(n):
-            PayProcs[n*i+j].start()
+        for j in range(n_proc):
+            PayProcs[n_proc*i+j].start()
 
     # Enquanto o tempo total de simuação não for atingido:
     while t < total_time:
@@ -105,8 +106,8 @@ if __name__ == "__main__":
         # Finalizando os TransactionGenerators
         TransGens[i].join()
         # Finalizando os PaymentProcessors
-        for j in range(n):
-            PayProcs[n*i+j].join()
+        for j in range(n_proc):
+            PayProcs[n_proc*i+j].join()
 
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")

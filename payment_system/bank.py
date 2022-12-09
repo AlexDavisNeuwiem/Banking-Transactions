@@ -259,10 +259,9 @@ class Bank():
         """
         # TODO: IMPLEMENTE AS MODIFICAÇÕES, SE NECESSÁRIAS, NESTE MÉTODO!
 
-        LOGGER.info(f"--------------------------------------------------------------------------------------")
-        LOGGER.info(f"Estatísticas do Banco Nacional {self._id}:")
+        LOGGER.info(f"------------------------------ Estatísticas do Banco Nacional {self._id} ------------------------------")
 
-        LOGGER.info(f"  1) Saldo de cada moeda nas reservas internas do banco")
+        LOGGER.info(f"  1) Saldo de cada moeda nas reservas internas do banco:")
         LOGGER.info(f"      USD = {self.reserves.USD.balance}")
         LOGGER.info(f"      EUR = {self.reserves.EUR.balance}")
         LOGGER.info(f"      GBP = {self.reserves.GBP.balance}")
@@ -270,19 +269,19 @@ class Bank():
         LOGGER.info(f"      CHF = {self.reserves.CHF.balance}")
         LOGGER.info(f"      BRL = {self.reserves.BRL.balance}")
 
-        LOGGER.info(f"  2) Número de transferências nacionais e internacionais realizadas")
+        LOGGER.info(f"  2) Número de transferências nacionais e internacionais realizadas:")
         LOGGER.info(f"      Nacionais = {self.ncnl}")
         LOGGER.info(f"      Interacionais = {self.inter}")
 
-        LOGGER.info(f"  3) Número de contas bancárias registradas no banco")
+        LOGGER.info(f"  3) Número de contas bancárias registradas no banco:")
         LOGGER.info(f"      Total de contas = {len(self.accounts)}")
         
-        LOGGER.info(f"  4) Saldo total de todas as contas bancárias (dos clientes) registradas no banco")
+        LOGGER.info(f"  4) Saldo total de todas as contas bancárias (dos clientes) registradas no banco:")
         total = 0
         for i in range(len(self.accounts)):
             total += self.accounts[i].balance
         LOGGER.info(f"      Saldo das {len(self.accounts)} contas = {total}")
 
-        LOGGER.info(f"  5) Lucro do banco (taxas de câmbio acumuladas + juros de cheque especial acumulados)")
+        LOGGER.info(f"  5) Lucro do banco (taxas de câmbio acumuladas + juros de cheque especial acumulados):")
         LOGGER.info(f"      Lucro = {self.profit}")
-        LOGGER.info(f"--------------------------------------------------------------------------------------")
+        LOGGER.info(f"----------------------------------------------------------------------------------------------")
