@@ -8,8 +8,6 @@ from utils.transaction import Transaction
 from utils.currency import Currency
 from utils.logger import LOGGER
 
-import queue
-
 class TransactionGenerator(Thread):
     """
     Uma classe para gerar e simular clientes de um banco por meio da geracão de transações bancárias.
@@ -59,7 +57,7 @@ class TransactionGenerator(Thread):
             amount = randint(100, 1000000)
             new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
             banks[self.bank._id].queue_mutex.acquire()
-            banks[self.bank._id].transaction_queue.put(new_transaction)
+            banks[self.bank._id].transaction_queue.append(new_transaction)
             banks[self.bank._id].queue_mutex.release()
             banks[self.bank._id].queue_sem.release()
             i += 1

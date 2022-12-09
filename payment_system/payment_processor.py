@@ -6,8 +6,6 @@ from payment_system.bank import Bank
 from utils.transaction import Transaction, TransactionStatus
 from utils.logger import LOGGER
 
-import queue
-
 class PaymentProcessor(Thread):
     """
     Uma classe para representar um processador de pagamentos de um banco.
@@ -51,8 +49,12 @@ class PaymentProcessor(Thread):
             try:
                 banks[self.bank._id].queue_sem.acquire()
                 banks[self.bank._id].queue_lock.acquire()
-                transaction = trans_queue.get()
-                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {list(trans_queue.queue)}")
+                transaction = trans_queue.pop(0)
+                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}:")
+                
+                #for trans in trans_queue :
+                #    LOGGER.info(f"  {trans._id}")
+                
                 banks[self.bank._id].queue_lock.release()
             except Exception as err:
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")

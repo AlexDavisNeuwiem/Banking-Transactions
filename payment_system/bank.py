@@ -7,8 +7,6 @@ from utils.transaction import Transaction
 from utils.currency import *
 from utils.logger import LOGGER
 
-import queue
-
 class Bank():
     """
     Uma classe para representar um Banco.
@@ -55,7 +53,7 @@ class Bank():
         self.operating          = True
         self.accounts           = []
 
-        self.transaction_queue  = queue.Queue()
+        self.transaction_queue  = []
         self.queue_lock         = Lock()
         self.queue_mutex        = Lock()
         self.queue_sem          = Semaphore(0)
@@ -77,7 +75,7 @@ class Bank():
         # TODO: IMPLEMENTE AS MODIFICAÇÕES, SE NECESSÁRIAS, NESTE MÉTODO!
 
         # Gera _id para a nova Account
-        acc_id = len(self.accounts) + 1
+        acc_id = len(self.accounts)
 
         # Cria instância da classe Account
         acc = Account(_id=acc_id, _bank_id=self._id, currency=self.currency, balance=balance, overdraft_limit=overdraft_limit)

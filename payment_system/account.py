@@ -78,7 +78,7 @@ class Account:
         return True
 
 
-    def withdraw(self, amount: int) -> list[bool, int]:
+    def withdraw(self, amount: int) -> list:
         """
         Esse método deverá retirar o valor `amount` especificado do saldo da conta bancária (`balance`).
         Deverá ser retornado um valor bool indicando se foi possível ou não realizar a retirada.
