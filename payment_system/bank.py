@@ -1,5 +1,5 @@
 from typing import Tuple
-from threading import Thread, Lock, Semaphore
+from threading import Thread, Lock, RLock, Semaphore
 
 from globals import *
 from payment_system.account import Account, CurrencyReserves
@@ -30,7 +30,7 @@ class Bank():
         Lista contendo as contas bancárias dos clientes do banco.
     transaction_queue : Queue[Transaction]
         Fila FIFO contendo as transações bancárias pendentes que ainda serão processadas.
-    lucro: float
+    profit: float
         Float que representa o lucro do banco
     ncnl: int
         Inteiro que representa o total de transações nacionais realizadas
@@ -54,13 +54,20 @@ class Bank():
         self.reserves           = CurrencyReserves()
         self.operating          = True
         self.accounts           = []
-        self.transaction_queue  = queue.Queue()
-        self.lucro              = 0
-        self.ncnl               = 0
-        self.inter              = 0
-        self.queue_sem          = Semaphore(0)
-        self.queue_lock         = Lock()
 
+        self.transaction_queue  = queue.Queue()
+        self.queue_lock         = Lock()
+        self.queue_mutex        = Lock()
+        self.queue_sem          = Semaphore(0)
+
+        self.profit             = 0
+        self.profit_lock        = Lock()
+
+        self.ncnl               = 0
+        self.ncnl_lock          = Lock()
+
+        self.inter              = 0
+        self.inter_lock         = Lock()
 
     def new_account(self, balance: int = 0, overdraft_limit: int = 0) -> None:
         """
@@ -80,46 +87,96 @@ class Bank():
 
     def new_ncnl_transfer(origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
         result = banks[origin[0]].accounts[origin[1]].withdraw(banks[origin[0]].accounts[origin[1]], amount)
-        if result[0] == True :
-            banks[origin[0]].accounts[origin[1]].balance -= 0.05*result[1]
-            banks[origin[0]].lucro += 0.05*result[1]
-            banks[destination[0]].accounts[destination[1]].deposit(banks[destination[0]].accounts[destination[1]], amount)
-            banks[origin[0]].ncnl += 1
-            return True
-        else:
+        if result[0] == False :
             return False
+        banks[origin[0]].profit_lock.acquire()
+        banks[origin[0]].profit += 0.05*result[1]
+        banks[origin[0]].profit_lock.release()
+        banks[destination[0]].accounts[destination[1]].deposit(banks[destination[0]].accounts[destination[1]], amount)
+        banks[origin[0]].ncnl_lock.acquire()
+        banks[origin[0]].ncnl += 1
+        banks[origin[0]].ncnl_lock.release()
+        return True
 
     def new_inter_transfer(origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
 
-            result = banks[origin[0]].accounts[origin[1]].withdraw(banks[origin[0]].accounts[origin[1]], amount)
-            if result[0] == False :
-                return False
+            """
+            - Sou conta BRL e quero transferir 200 USD para uma conta externa
+            - Com rate de 1 USD = 5 BRL, tenho que transferir 1000 BRL
+            - Primeiro transfiro os 1000 BRLs para o banco BRL (+ taxa de câmbio 0.01*1000)
+                - withdraw 1000+10 BRL da conta de origem
+                - deposit 1000+10 BRL na conta do banco de origem
+                - withdraw 200 USD da conta do banco de origem
+                - deposit 200 USD na conta destino
+            """
 
-
+            # Convertendo as moedas
             exchange_rate = banks[origin[0]].currency.get_exchange_rate(banks[origin[0]].currency, banks[destination[0]].currency)
-            exchange_rate = exchange_rate*100
-            banks[origin[0]].accounts[origin[1]].balance -= exchange_rate
-            banks[origin[0]].lucro += 0.01*exchange_rate
-            banks[origin[0]].inter += 1
 
-            if banks[destination[0]].currency == 1 :
-                banks[origin[0]].reserves.USD.deposit(banks[origin[0]].reserves.USD, amount)
-                return banks[origin[0]].new_ncnl_transfer(banks[origin[0]], tuple(), tuple(destination), amount)
-            elif banks[destination[0]].currency == 2 :
-                banks[origin[0]].reserves.EUR.deposit(banks[origin[0]].reserves.EUR, amount)
-                return banks[origin[0]].new_ncnl_transfer(banks[origin[0]], tuple(), tuple(destination), amount)
-            elif banks[destination[0]].currency == 3 :
-                banks[origin[0]].reserves.GBP.deposit(banks[origin[0]].reserves.GBP, amount)
-                return banks[origin[0]].new_ncnl_transfer(banks[origin[0]], tuple(), tuple(destination), amount)
-            elif banks[destination[0]].currency == 4 :
-                banks[origin[0]].reserves.JPY.deposit(banks[origin[0]].reserves.JPY, amount)
-                return banks[origin[0]].new_ncnl_transfer(banks[origin[0]], tuple(), tuple(destination), amount)
-            elif banks[destination[0]].currency == 5 :
-                banks[origin[0]].reserves.CHF.deposit(banks[origin[0]].reserves.CHF, amount)
-                return banks[origin[0]].new_ncnl_transfer(banks[origin[0]], tuple(), tuple(destination), amount)
+            # Calculando o valor com taxa de câmbio
+            new_amount = amount*exchange_rate + 0.01*amount*exchange_rate
+
+            # Fazendo o Lock na conta origem
+            banks[origin[0]].accounts[origin[1]].account_lock.acquire()
+
+            # Fazer um if e lock com todas as contas especiais e verificar se tudo funciona certinho
+
+            # Fim do teste
+
+            # Retirando o valor com taxa de câmbio da conta origem
+            result = banks[origin[0]].accounts[origin[1]].withdraw(banks[origin[0]].accounts[origin[1]], new_amount)
+
+            banks[origin[0]].profit_lock.acquire()
+            banks[origin[0]].profit += 0.05*result[1]
+            banks[origin[0]].profit_lock.release()
+
+            # Depositando o valor com taxa de câmbio na conta especial de moeda origem
+            if banks[origin[0]].currency == 1 :
+                banks[origin[0]].reserves.USD.deposit(banks[origin[0]].reserves.USD, new_amount)
+                
+            elif banks[origin[0]].currency == 2 :
+                banks[origin[0]].reserves.EUR.deposit(banks[origin[0]].reserves.EUR, new_amount)
+                
+            elif banks[origin[0]].currency == 3 :
+                banks[origin[0]].reserves.GBP.deposit(banks[origin[0]].reserves.GBP, new_amount)
+
+            elif banks[origin[0]].currency == 4 :
+                banks[origin[0]].reserves.JPY.deposit(banks[origin[0]].reserves.JPY, new_amount)
+                
+            elif banks[origin[0]].currency == 5 :
+                banks[origin[0]].reserves.CHF.deposit(banks[origin[0]].reserves.CHF, new_amount)
+                
             else:
-                banks[origin[0]].reserves.BRL.deposit(banks[origin[0]].rreserves.BRL, amount)
-                return banks[origin[0]].new_ncnl_transfer(banks[origin[0]], tuple(), tuple(destination), amount)
+                banks[origin[0]].reserves.BRL.deposit(banks[origin[0]].reserves.BRL, new_amount)
+
+            # Retirando o valor sem taxa de cãmbio da conta especial de moeda destino
+            if banks[destination[0]].currency == 1 :
+                banks[origin[0]].reserves.USD.withdraw(banks[origin[0]].reserves.USD, amount)
+                
+            elif banks[destination[0]].currency == 2 :
+                banks[origin[0]].reserves.EUR.withdraw(banks[origin[0]].reserves.EUR, amount)
+                
+            elif banks[destination[0]].currency == 3 :
+                banks[origin[0]].reserves.GBP.withdraw(banks[origin[0]].reserves.GBP, amount)
+
+            elif banks[destination[0]].currency == 4 :
+                banks[origin[0]].reserves.JPY.withdraw(banks[origin[0]].reserves.JPY, amount)
+                
+            elif banks[destination[0]].currency == 5 :
+                banks[origin[0]].reserves.CHF.withdraw(banks[origin[0]].reserves.CHF, amount)
+                
+            else:
+                banks[origin[0]].reserves.BRL.withdraw(banks[origin[0]].reserves.BRL, amount)
+            
+            # Depositando o valor sem taxa de câmbio na conta destino
+            banks[destination[0]].accounts[destination[1]].deposit(banks[destination[0]].accounts[destination[1]], amount)
+
+            banks[origin[0]].inter_lock.acquire()
+            banks[origin[0]].inter += 1
+            banks[origin[0]].inter_lock.release()
+
+            # Unlock em todas as contas que fizeram Lock
+            banks[origin[0]].accounts[origin[1]].account_lock.release()
 
     def info(self) -> None:
         """
@@ -157,5 +214,5 @@ class Bank():
         LOGGER.info(f"      Saldo das {len(self.accounts)} contas = {total}")
 
         LOGGER.info(f"  5) Lucro do banco (taxas de câmbio acumuladas + juros de cheque especial acumulados)")
-        LOGGER.info(f"      Lucro = {self.lucro}")
+        LOGGER.info(f"      Lucro = {self.profit}")
         LOGGER.info(f"--------------------------------------------------------------------------------------")

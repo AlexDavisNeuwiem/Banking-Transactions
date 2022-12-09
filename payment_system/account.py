@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from utils.currency import Currency
 from utils.logger import LOGGER
 
-from threading import Lock
+from threading import RLock
 
 @dataclass
 class Account:
@@ -41,7 +41,7 @@ class Account:
     _id: int
     _bank_id: int
     currency: Currency
-    account_lock: Lock = Lock()
+    account_lock: RLock = RLock()
     balance: int = 0
     overdraft_limit: int = 0
 
@@ -100,7 +100,7 @@ class Account:
         else:
             overdrafted_amount = abs(self.balance - amount)
             if self.overdraft_limit >= overdrafted_amount:
-                self.balance -= amount
+                self.balance = self.balance - (amount + 0.05*overdrafted_amount)
                 result = [True, overdrafted_amount]
                 LOGGER.info(f"withdraw({amount}) successful with overdraft!")
                 self.account_lock.release()

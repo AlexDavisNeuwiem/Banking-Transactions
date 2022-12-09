@@ -58,7 +58,9 @@ class TransactionGenerator(Thread):
 
             amount = randint(100, 1000000)
             new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
+            banks[self.bank._id].queue_mutex.acquire()
             banks[self.bank._id].transaction_queue.put(new_transaction)
+            banks[self.bank._id].queue_mutex.release()
             banks[self.bank._id].queue_sem.release()
             i += 1
             time.sleep(0.2 * time_unit)
