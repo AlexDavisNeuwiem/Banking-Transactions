@@ -86,6 +86,12 @@ class PaymentProcessor(Thread):
 
         if result == False :
             transaction.set_status(TransactionStatus.FAILED)
+
+            self.bank.total_trans_lock.acquire()
+            self.bank.total_trans += 1
+            self.bank.total_trans_time += transaction.get_processing_time().total_seconds()
+            self.bank.total_trans_lock.release()
+
             return transaction.status
 
         transaction.set_status(TransactionStatus.SUCCESSFUL)
