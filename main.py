@@ -70,7 +70,7 @@ if __name__ == "__main__":
             bank.new_account(new_balance, new_over_lim)
 
     # Criando n_proc Payment_Processors e um Transaction_Generator para cada banco:
-    n_proc = 100
+    n_proc = 10
     TransGens = []
     PayProcs = []
     not_finalized = n_proc
