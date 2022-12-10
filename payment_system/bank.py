@@ -57,10 +57,6 @@ class Bank():
     -------
     new_account(balance: int = 0, overdraft_limit: int = 0) -> None:
         Cria uma nova conta bancária (Account) no banco.
-    new_ncnl_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-        Realiza as transações nacionais de um dado banco
-    new_inter_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-        Realiza as transações internacionais de um dado banco
     info() -> None:
         Printa informações e estatísticas sobre o funcionamento do banco.
     
@@ -107,161 +103,6 @@ class Bank():
         # Adiciona a Account criada na lista de contas do banco
         self.accounts.append(acc)
 
-    def new_ncnl_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-        result = banks[origin[0]].accounts[origin[1]].withdraw(amount)
-        if result[0] == False :
-            return False
-        banks[origin[0]].profit_lock.acquire()
-        banks[origin[0]].profit += 0.05*result[1]
-        banks[origin[0]].profit_lock.release()
-        banks[destination[0]].accounts[destination[1]].deposit(amount)
-        banks[origin[0]].ncnl_lock.acquire()
-        banks[origin[0]].ncnl += 1
-        banks[origin[0]].ncnl_lock.release()
-        return True
-
-    def new_inter_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-            # Convertendo as moedas
-            exchange_rate = get_exchange_rate(banks[origin[0]].currency, banks[destination[0]].currency)
-
-            # Calculando o valor com taxa de câmbio
-            new_amount = amount*exchange_rate + 0.01*amount*exchange_rate
-
-            # Fazendo o Lock na conta origem
-            banks[origin[0]].accounts[origin[1]].account_lock.acquire()
-
-            # Verificando se é possível realizar a transferência
-            if (banks[origin[0]].accounts[origin[1]].balance + banks[origin[0]].accounts[origin[1]].overdraft_limit) < new_amount :
-                banks[origin[0]].accounts[origin[1]].account_lock.release()
-                return False
-
-            if banks[destination[0]].currency == 1 :
-                # Fazendo o Lock na conta especial
-                banks[origin[0]].reserves.USD.account_lock.acquire()
-                # Verificando se é possível realizar a transferência
-                if (banks[origin[0]].reserves.USD.balance + banks[origin[0]].reserves.USD.overdraft_limit) < amount :
-                    banks[origin[0]].reserves.USD.account_lock.release()
-                    banks[origin[0]].accounts[origin[1]].account_lock.release()
-                    return False
-                
-            elif banks[destination[0]].currency == 2 :
-                # Fazendo o Lock na conta especial
-                banks[origin[0]].reserves.EUR.account_lock.acquire()
-                # Verificando se é possível realizar a transferência
-                if (banks[origin[0]].reserves.EUR.balance + banks[origin[0]].reserves.EUR.overdraft_limit) < amount :
-                    banks[origin[0]].reserves.EUR.account_lock.release()
-                    banks[origin[0]].accounts[origin[1]].account_lock.release()
-                    return False
-                
-            elif banks[destination[0]].currency == 3 :
-                # Fazendo o Lock na conta especial
-                banks[origin[0]].reserves.GBP.account_lock.acquire()
-                # Verificando se é possível realizar a transferência
-                if (banks[origin[0]].reserves.GBP.balance + banks[origin[0]].reserves.GBP.overdraft_limit) < amount :
-                    banks[origin[0]].reserves.GBP.account_lock.release()
-                    banks[origin[0]].accounts[origin[1]].account_lock.release()
-                    return False
-
-            elif banks[destination[0]].currency == 4 :
-                # Fazendo o Lock na conta especial
-                banks[origin[0]].reserves.JPY.account_lock.acquire()
-                # Verificando se é possível realizar a transferência
-                if (banks[origin[0]].reserves.JPY.balance + banks[origin[0]].reserves.JPY.overdraft_limit) < amount :
-                    banks[origin[0]].reserves.JPY.account_lock.release()
-                    banks[origin[0]].accounts[origin[1]].account_lock.release()
-                    return False
-                
-            elif banks[destination[0]].currency == 5 :
-                # Fazendo o Lock na conta especial
-                banks[origin[0]].reserves.CHF.account_lock.acquire()
-                # Verificando se é possível realizar a transferência
-                if (banks[origin[0]].reserves.CHF.balance + banks[origin[0]].reserves.CHF.overdraft_limit) < amount :
-                    banks[origin[0]].reserves.CHF.account_lock.release()
-                    banks[origin[0]].accounts[origin[1]].account_lock.release()
-                    return False
-                
-            else:
-                # Fazendo o Lock na conta especial
-                banks[origin[0]].reserves.BRL.account_lock.acquire()
-                # Verificando se é possível realizar a transferência
-                if (banks[origin[0]].reserves.BRL.balance + banks[origin[0]].reserves.BRL.overdraft_limit) < amount :
-                    banks[origin[0]].reserves.BRL.account_lock.release()
-                    banks[origin[0]].accounts[origin[1]].account_lock.release()
-                    return False
-
-            # Retirando o valor com taxa de câmbio da conta origem
-            result = banks[origin[0]].accounts[origin[1]].withdraw(new_amount)
-            
-            # Unlock em todas as contas que fizeram Lock
-            banks[origin[0]].accounts[origin[1]].account_lock.release()
-
-            banks[origin[0]].profit_lock.acquire()
-            banks[origin[0]].profit += 0.05*result[1]
-            banks[origin[0]].profit_lock.release()
-
-            # Depositando o valor com taxa de câmbio na conta especial de moeda origem
-            if banks[origin[0]].currency == 1 :
-                banks[origin[0]].reserves.USD.deposit(new_amount)
-                
-            elif banks[origin[0]].currency == 2 :
-                banks[origin[0]].reserves.EUR.deposit(new_amount)
-                
-            elif banks[origin[0]].currency == 3 :
-                banks[origin[0]].reserves.GBP.deposit(new_amount)
-
-            elif banks[origin[0]].currency == 4 :
-                banks[origin[0]].reserves.JPY.deposit(new_amount)
-                
-            elif banks[origin[0]].currency == 5 :
-                banks[origin[0]].reserves.CHF.deposit(new_amount)
-                
-            else:
-                banks[origin[0]].reserves.BRL.deposit(new_amount)
-
-            # Retirando o valor sem taxa de cãmbio da conta especial de moeda destino
-            if banks[destination[0]].currency == 1 :
-                result = banks[origin[0]].reserves.USD.withdraw(amount)
-                banks[origin[0]].reserves.USD.account_lock.release()
-                fixing = 0.05*result[1]
-                banks[origin[0]].reserves.USD.deposit(fixing)
-                
-            elif banks[destination[0]].currency == 2 :
-                result = banks[origin[0]].reserves.EUR.withdraw(amount)
-                banks[origin[0]].reserves.EUR.account_lock.release()
-                fixing = 0.05*result[1]
-                banks[origin[0]].reserves.EUR.deposit(fixing)
-                
-            elif banks[destination[0]].currency == 3 :
-                result = banks[origin[0]].reserves.GBP.withdraw(amount)
-                banks[origin[0]].reserves.GBP.account_lock.release()
-                fixing = 0.05*result[1]
-                banks[origin[0]].reserves.GBP.deposit(fixing)
-
-            elif banks[destination[0]].currency == 4 :
-                result = banks[origin[0]].reserves.JPY.withdraw(amount)
-                banks[origin[0]].reserves.JPY.account_lock.release()
-                fixing = 0.05*result[1]
-                banks[origin[0]].reserves.JPY.deposit(fixing)
-                
-            elif banks[destination[0]].currency == 5 :
-                result = banks[origin[0]].reserves.CHF.withdraw(amount)
-                banks[origin[0]].reserves.CHF.account_lock.release()
-                fixing = 0.05*result[1]
-                banks[origin[0]].reserves.CHF.deposit(fixing)
-                
-            else:
-                result = banks[origin[0]].reserves.BRL.withdraw(amount)
-                banks[origin[0]].reserves.BRL.account_lock.release()
-                fixing = 0.05*result[1]
-                banks[origin[0]].reserves.BRL.deposit(fixing)
-            
-            # Depositando o valor sem taxa de câmbio na conta destino
-            banks[destination[0]].accounts[destination[1]].deposit(amount)
-
-            banks[origin[0]].inter_lock.acquire()
-            banks[origin[0]].inter += 1
-            banks[origin[0]].inter_lock.release()
-
     def info(self) -> None:
         """
         Essa função deverá printar os seguintes dados utilizando o LOGGER fornecido:
@@ -303,12 +144,7 @@ class Bank():
         LOGGER.info(f"      Transações concluídas = {self.total_trans}")
         LOGGER.info(f"      Transações pendentes = {len(self.transaction_queue)}")
 
-        LOGGER.info(f"  7) Média de tempo das transações:")
-        LOGGER.info(f"      Média das transações que foram processadas = {(self.total_trans_time / self.total_trans)} segundos")
-        if len(self.transaction_queue) > 0 :
-            total_time = 0
-            for trans in self.transaction_queue:
-                total_time += trans.get_processing_time().total_seconds()
-            LOGGER.info(f"      Média das transações que não foram processadas = {(total_time / len(self.transaction_queue))} segundos")
+        LOGGER.info(f"  7) Média do tempo de espera das transações processadas:")
+        LOGGER.info(f"      Média = {(self.total_trans_time / self.total_trans)} segundos")
 
         LOGGER.info(f"----------------------------------------------------------------------------------------------")

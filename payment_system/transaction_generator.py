@@ -64,5 +64,9 @@ class TransactionGenerator(Thread):
             banks[self.bank._id].queue_sem.release()
             i += 1
             time.sleep(0.2 * time_unit)
+        """
+        for j in range(total_processors):
+            banks[self.bank._id].queue_sem.release()
+        """
         LOGGER.info(f"O TransactionGenerator {self._id} do banco {self.bank._id} foi finalizado.")
 

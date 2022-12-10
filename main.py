@@ -73,22 +73,18 @@ if __name__ == "__main__":
     n_proc = 15
     TransGens = []
     PayProcs = []
+    total_processors = n_proc
 
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
         tg = TransactionGenerator(_id=i, bank=bank)
         TransGens.append(tg)
+        tg.start()
         # Inicializa n_proc PaymentProcessor thread por banco:
         for j in range(n_proc):
             pp = PaymentProcessor(_id=(n_proc*i+j), bank=bank)
             PayProcs.append(pp)
-
-    for i, bank in enumerate(banks):
-        # Executa um TransactionGenerator thread por banco:
-        TransGens[i].start()
-        # Executa n_proc PaymentProcessors thread por banco:
-        for j in range(n_proc):
-            PayProcs[n_proc*i+j].start()
+            pp.start()
 
     # Enquanto o tempo total de simuação não for atingido:
     while t < total_time:
@@ -97,19 +93,19 @@ if __name__ == "__main__":
         t += dt
 
     # Encerrando o funcionamento de cada banco:
-    for i, bank in enumerate(banks):
+    for bank in banks:
         bank.operating = False
 
-    # Finalizando todas as threads:
-    for i, bank in enumerate(banks):
-        # Finalizando os Transaction_Generators:
-        TransGens[i].join()
-        # Finalizando os Payment_Processors:
-        for j in range(n_proc):
-            PayProcs[n_proc*i+j].join()
+    # Finalizando os Transaction_Generators:
+    for trans_gen in TransGens:
+        trans_gen.join()
+    
+    # Finalizando os Payment_Processors:
+    for pay_proc in PayProcs:
+        pay_proc.join()
 
     # Termina simulação. Após esse print somente dados devem ser printados no console.
     LOGGER.info(f"A simulação chegou ao fim!\n")
 
-    for i, bank in enumerate(banks):
+    for bank in banks:
         bank.info()
