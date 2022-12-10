@@ -62,7 +62,7 @@ if __name__ == "__main__":
         banks.append(bank)
 
     # Cria n_acc contas em cada banco:
-    n_acc = 15
+    n_acc = 20
     for i, bank in enumerate(banks):
         for j in range(n_acc):
             new_balance = randint(100, 1000000)
