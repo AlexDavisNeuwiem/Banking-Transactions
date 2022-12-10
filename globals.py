@@ -10,7 +10,7 @@ debug = False
 not_finalized = 0
 
 # Tempo total de simulação
-total_time = 1000
+total_time = 100
 
 # Unidade de tempo (quanto menor, mais rápida a simulação)
 time_unit = 0.1  # 0.1 = 100ms

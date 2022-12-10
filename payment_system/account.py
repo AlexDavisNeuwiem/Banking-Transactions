@@ -21,8 +21,8 @@ class Account:
         Identificador do banco no qual a conta bancária foi criada.
     currency : Currency
         Moeda corrente da conta bancária.
-    account_lock: Lock
-        Mutex que impede que duas ou mais threads modifiquem o saldo ao mesmo tempo
+    account_lock: RLock
+        Mutex reentrante que impede que duas ou mais threads modifiquem o saldo ao mesmo tempo
     balance : int
         Saldo da conta bancária.
     overdraft_limit : int

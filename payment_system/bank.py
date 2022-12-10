@@ -28,19 +28,33 @@ class Bank():
         Lista contendo as contas bancárias dos clientes do banco.
     transaction_queue : Queue[Transaction]
         Fila FIFO contendo as transações bancárias pendentes que ainda serão processadas.
+    queue_lock: Lock
+        Lock que impede que dois ou mais Payment_Processors acessem uma mesma posição da Transaction_Queue ao mesmo tempo
+    queue_mutex: Lock
+        Lock que impede que dois ou mais Transaction_Generators acessem uma mesma posição da Transaction_Queue ao mesmo tempo
+    queue_sem: Semaphore
+        Semáforo que impede a espera ocupada dos Payment_Processors
     profit: float
         Float que representa o lucro do banco
+    profit_lock: Lock
+        Lock que impede que duas ou mais threads alterem a variável profit ao mesmo tempo
     ncnl: int
         Inteiro que representa o total de transações nacionais realizadas
+    ncnl_lock: Lock
+        Lock que impede que duas ou mais threads alterem a variável ncnl ao mesmo tempo
     inter: int
         Inteiro que representa o total de transações internacionais realizadas
+    inter_lock: Lock
+        Lock que impede que duas ou mais threads alterem a variável inter ao mesmo tempo
 
     Métodos
     -------
     new_account(balance: int = 0, overdraft_limit: int = 0) -> None:
         Cria uma nova conta bancária (Account) no banco.
-    new_transfer(origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-        Cria uma nova transação bancária.
+    new_ncnl_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
+        Realiza as transações nacionais de um dado banco
+    new_inter_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
+        Realiza as transações internacionais de um dado banco
     info() -> None:
         Printa informações e estatísticas sobre o funcionamento do banco.
     
@@ -97,17 +111,6 @@ class Bank():
         return True
 
     def new_inter_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
-
-            """
-            - Sou conta BRL e quero transferir 200 USD para uma conta externa
-            - Com rate de 1 USD = 5 BRL, tenho que transferir 1000 BRL
-            - Primeiro transfiro os 1000 BRLs para o banco BRL (+ taxa de câmbio 0.01*1000)
-                - withdraw 1000+10 BRL da conta de origem
-                - deposit 1000+10 BRL na conta do banco de origem
-                - withdraw 200 USD da conta do banco de origem
-                - deposit 200 USD na conta destino
-            """
-
             # Convertendo as moedas
             exchange_rate = get_exchange_rate(banks[origin[0]].currency, banks[destination[0]].currency)
 
@@ -178,6 +181,7 @@ class Bank():
 
             # Retirando o valor com taxa de câmbio da conta origem
             result = banks[origin[0]].accounts[origin[1]].withdraw(new_amount)
+            
             # Unlock em todas as contas que fizeram Lock
             banks[origin[0]].accounts[origin[1]].account_lock.release()
 
@@ -284,4 +288,8 @@ class Bank():
 
         LOGGER.info(f"  5) Lucro do banco (taxas de câmbio acumuladas + juros de cheque especial acumulados):")
         LOGGER.info(f"      Lucro = {self.profit}")
+
+        LOGGER.info(f"  6) Total de transações não concluídas:")
+        LOGGER.info(f"      Transações pendentes = {len(self.transaction_queue)}")
+
         LOGGER.info(f"----------------------------------------------------------------------------------------------")

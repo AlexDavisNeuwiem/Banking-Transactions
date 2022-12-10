@@ -50,7 +50,7 @@ if __name__ == "__main__":
         # Cria Banco Nacional
         bank = Bank(_id=i, currency=currency)
         
-        # Deposita valores aleatórios nas contas internas (reserves) do banco
+        # Deposita valores aleatórios nas contas internas (reserves) do banco:
         bank.reserves.BRL.deposit(randint(100_000_000, 10_000_000_000))
         bank.reserves.CHF.deposit(randint(100_000_000, 10_000_000_000))
         bank.reserves.EUR.deposit(randint(100_000_000, 10_000_000_000))
@@ -58,10 +58,10 @@ if __name__ == "__main__":
         bank.reserves.JPY.deposit(randint(100_000_000, 10_000_000_000))
         bank.reserves.USD.deposit(randint(100_000_000, 10_000_000_000))
         
-        # Adiciona banco na lista global de bancos
+        # Adiciona banco na lista global de bancos:
         banks.append(bank)
 
-    # Cria m contas em cada banco
+    # Cria n_acc contas em cada banco:
     n_acc = 10
     for i, bank in enumerate(banks):
         for j in range(n_acc):
@@ -69,8 +69,8 @@ if __name__ == "__main__":
             new_over_lim = randint(100, 1000000)
             bank.new_account(new_balance, new_over_lim)
 
-    # Inicializa gerador de transações e processadores de pagamentos para os Bancos Nacionais:
-    n_proc = 20
+    # Criando n_proc Payment_Processors e um Transaction_Generator para cada banco:
+    n_proc = 100
     TransGens = []
     PayProcs = []
     not_finalized = n_proc
@@ -79,16 +79,15 @@ if __name__ == "__main__":
         # Inicializa um TransactionGenerator thread por banco:
         tg = TransactionGenerator(_id=i, bank=bank)
         TransGens.append(tg)
-        # Inicializa um PaymentProcessor thread por banco.
+        # Inicializa n_proc PaymentProcessor thread por banco:
         for j in range(n_proc):
             pp = PaymentProcessor(_id=(n_proc*i+j), bank=bank)
             PayProcs.append(pp)
 
     for i, bank in enumerate(banks):
-        # Inicializa um TransactionGenerator thread por banco:
+        # Executa um TransactionGenerator thread por banco:
         TransGens[i].start()
-        # Inicializa um PaymentProcessor thread por banco.
-        # Sua solução completa deverá funcionar corretamente com múltiplos PaymentProcessor threads para cada banco.
+        # Executa n_proc PaymentProcessors thread por banco:
         for j in range(n_proc):
             PayProcs[n_proc*i+j].start()
 
@@ -98,14 +97,15 @@ if __name__ == "__main__":
         time.sleep(dt * time_unit)
         t += dt
 
+    # Encerrando o funcionamento de cada banco:
     for i, bank in enumerate(banks):
         bank.operating = False
 
-    # Finaliza todas as threads
+    # Finalizando todas as threads:
     for i, bank in enumerate(banks):
-        # Finalizando os TransactionGenerators
+        # Finalizando os Transaction_Generators:
         TransGens[i].join()
-        # Finalizando os PaymentProcessors
+        # Finalizando os Payment_Processors:
         for j in range(n_proc):
             PayProcs[n_proc*i+j].join()
 

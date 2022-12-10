@@ -52,11 +52,7 @@ class PaymentProcessor(Thread):
                     break
                 banks[self.bank._id].queue_lock.acquire()
                 transaction = trans_queue.pop(0)
-                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}:")
-                
-                #for trans in trans_queue :
-                #    LOGGER.info(f"  {trans._id}")
-                
+                LOGGER.info(f"Transaction_queue do Banco {self.bank._id}: {[trans._id for trans in trans_queue]}")
                 banks[self.bank._id].queue_lock.release()
             except Exception as err:
                 LOGGER.error(f"Falha em PaymentProcessor.run(): {err}")
