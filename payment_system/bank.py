@@ -303,7 +303,12 @@ class Bank():
         LOGGER.info(f"      Transações concluídas = {self.total_trans}")
         LOGGER.info(f"      Transações pendentes = {len(self.transaction_queue)}")
 
-        LOGGER.info(f"  7) Média de tempo em que as transações ficaram na fila de espera:")
-        LOGGER.info(f"      Média total = {(self.total_trans_time / self.total_trans)} segundos")
+        LOGGER.info(f"  7) Média de tempo das transações:")
+        LOGGER.info(f"      Média das transações que foram processadas = {(self.total_trans_time / self.total_trans)} segundos")
+        if len(self.transaction_queue) > 0 :
+            total_time = 0
+            for trans in self.transaction_queue:
+                total_time += trans.get_processing_time().total_seconds()
+            LOGGER.info(f"      Média das transações que não foram processadas = {(total_time / len(self.transaction_queue))} segundos")
 
         LOGGER.info(f"----------------------------------------------------------------------------------------------")

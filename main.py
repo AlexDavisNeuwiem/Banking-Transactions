@@ -62,7 +62,7 @@ if __name__ == "__main__":
         banks.append(bank)
 
     # Cria n_acc contas em cada banco:
-    n_acc = 10
+    n_acc = 15
     for i, bank in enumerate(banks):
         for j in range(n_acc):
             new_balance = randint(100, 1000000)
@@ -73,7 +73,6 @@ if __name__ == "__main__":
     n_proc = 15
     TransGens = []
     PayProcs = []
-    not_finalized = n_proc
 
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
