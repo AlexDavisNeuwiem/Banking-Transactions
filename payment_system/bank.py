@@ -46,6 +46,12 @@ class Bank():
         Inteiro que representa o total de transações internacionais realizadas
     inter_lock: Lock
         Lock que impede que duas ou mais threads alterem a variável inter ao mesmo tempo
+    total_trans: int
+        Inteiro que armazana a quantidade de transações que foram processadas
+    total_trans_lock: Lock
+        Lock que impede que duas ou mais threads alterem a variável total_trans ao mesmo tempo
+    total_trans_time: float
+        Float que armazena a quantidade de processamento de cada transação em segundos
 
     Métodos
     -------
@@ -80,6 +86,10 @@ class Bank():
 
         self.inter              = 0
         self.inter_lock         = Lock()
+
+        self.total_trans        = 0
+        self.total_trans_lock   = Lock()
+        self.total_trans_time   = 0
 
     def new_account(self, balance: int = 0, overdraft_limit: int = 0) -> None:
         """
@@ -289,7 +299,11 @@ class Bank():
         LOGGER.info(f"  5) Lucro do banco (taxas de câmbio acumuladas + juros de cheque especial acumulados):")
         LOGGER.info(f"      Lucro = {self.profit}")
 
-        LOGGER.info(f"  6) Total de transações não concluídas:")
+        LOGGER.info(f"  6) Estado final das transações:")
+        LOGGER.info(f"      Transações concluídas = {self.total_trans}")
         LOGGER.info(f"      Transações pendentes = {len(self.transaction_queue)}")
+
+        LOGGER.info(f"  7) Média de tempo em que as transações ficaram na fila de espera:")
+        LOGGER.info(f"      Média total = {(self.total_trans_time / self.total_trans)} segundos")
 
         LOGGER.info(f"----------------------------------------------------------------------------------------------")
