@@ -73,7 +73,6 @@ if __name__ == "__main__":
     n_proc = 10
     TransGens = []
     PayProcs = []
-    total_processors = n_proc
 
     for i, bank in enumerate(banks):
         # Inicializa um TransactionGenerator thread por banco:
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     # Finalizando os Transaction_Generators:
     for trans_gen in TransGens:
         trans_gen.join()
-    
+
     # Finalizando os Payment_Processors:
     for pay_proc in PayProcs:
         pay_proc.join()

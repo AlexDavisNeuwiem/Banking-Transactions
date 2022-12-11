@@ -6,9 +6,6 @@ banks = []
 # Printar Logs de DEBUG no console?
 debug = False
 
-# Variável que armazena a quantidade de Payment_Processors criados
-total_processors = 0
-
 # Tempo total de simulação
 total_time = 50
 

@@ -42,8 +42,6 @@ class TransactionGenerator(Thread):
         # TODO: IMPLEMENTE AS MODIFICAÇÕES, SE NECESSÁRIAS, NESTE MÉTODO!
 
         LOGGER.info(f"Inicializado TransactionGenerator para o Banco Nacional {self.bank._id}!")
-
-        global not_finalized
         
         i = 0
         while banks[self.bank._id].operating :
@@ -64,9 +62,6 @@ class TransactionGenerator(Thread):
             banks[self.bank._id].queue_sem.release()
             i += 1
             time.sleep(0.2 * time_unit)
-        """
-        for j in range(total_processors):
-            banks[self.bank._id].queue_sem.release()
-        """
+        
         LOGGER.info(f"O TransactionGenerator {self._id} do banco {self.bank._id} foi finalizado.")
 

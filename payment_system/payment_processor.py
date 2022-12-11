@@ -54,7 +54,7 @@ class PaymentProcessor(Thread):
         while banks[self.bank._id].operating :
             try:
                 banks[self.bank._id].queue_sem.acquire()
-                if not(banks[self.bank._id].operating) :
+                if banks[self.bank._id].operating == False :
                     break
                 banks[self.bank._id].queue_lock.acquire()
                 transaction = trans_queue.pop(0)
@@ -67,16 +67,24 @@ class PaymentProcessor(Thread):
         LOGGER.info(f"O PaymentProcessor {self._id} do banco {self.bank._id} foi finalizado.")
 
     def new_ncnl_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
+        # Verificando se é possível realizar a transação
         result = banks[origin[0]].accounts[origin[1]].withdraw(amount)
         if result[0] == False :
             return False
+
+        # Incrementando a variável lucro
         banks[origin[0]].profit_lock.acquire()
         banks[origin[0]].profit += 0.05*result[1]
         banks[origin[0]].profit_lock.release()
+
+        # Depositando o valor na conta destino
         banks[destination[0]].accounts[destination[1]].deposit(amount)
+
+        # Incrementando a variável nacional
         banks[origin[0]].ncnl_lock.acquire()
         banks[origin[0]].ncnl += 1
         banks[origin[0]].ncnl_lock.release()
+
         return True
 
     def new_inter_transfer(self, origin: Tuple[int, int], destination: Tuple[int, int], amount: int, currency: Currency) -> bool:
@@ -150,10 +158,8 @@ class PaymentProcessor(Thread):
 
             # Retirando o valor com taxa de câmbio da conta origem
             result = banks[origin[0]].accounts[origin[1]].withdraw(new_amount)
-            
-            # Unlock em todas as contas que fizeram Lock
-            banks[origin[0]].accounts[origin[1]].account_lock.release()
 
+            # Incrementando a variável lucro
             banks[origin[0]].profit_lock.acquire()
             banks[origin[0]].profit += 0.05*result[1]
             banks[origin[0]].profit_lock.release()
@@ -177,7 +183,7 @@ class PaymentProcessor(Thread):
             else:
                 banks[origin[0]].reserves.BRL.deposit(new_amount)
 
-            # Retirando o valor sem taxa de cãmbio da conta especial de moeda destino
+            # Retirando o valor sem taxa de câmbio da conta especial de moeda destino
             if banks[destination[0]].currency == 1 :
                 result = banks[origin[0]].reserves.USD.withdraw(amount)
                 banks[origin[0]].reserves.USD.account_lock.release()
@@ -214,12 +220,18 @@ class PaymentProcessor(Thread):
                 fixing = 0.05*result[1]
                 banks[origin[0]].reserves.BRL.deposit(fixing)
             
+            # Unlock em todas as contas que fizeram Lock
+            banks[origin[0]].accounts[origin[1]].account_lock.release()
+
             # Depositando o valor sem taxa de câmbio na conta destino
             banks[destination[0]].accounts[destination[1]].deposit(amount)
 
+            # Incrementando a variável internacional
             banks[origin[0]].inter_lock.acquire()
             banks[origin[0]].inter += 1
             banks[origin[0]].inter_lock.release()
+
+            return True
 
     def process_transaction(self, transaction: Transaction) -> TransactionStatus:
         """
