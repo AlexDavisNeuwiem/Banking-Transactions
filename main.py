@@ -62,7 +62,7 @@ if __name__ == "__main__":
         banks.append(bank)
 
     # Cria n_acc contas em cada banco:
-    n_acc = 20
+    n_acc = 100
     for i, bank in enumerate(banks):
         for j in range(n_acc):
             new_balance = randint(100, 1000000)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             bank.new_account(new_balance, new_over_lim)
 
     # Criando n_proc Payment_Processors e um Transaction_Generator para cada banco:
-    n_proc = 10
+    n_proc = 20
     TransGens = []
     PayProcs = []
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         tg.start()
         # Inicializa n_proc PaymentProcessor thread por banco:
         for j in range(n_proc):
-            pp = PaymentProcessor(_id=(n_proc*i+j), bank=bank)
+            pp = PaymentProcessor(_id=(j), bank=bank)
             PayProcs.append(pp)
             pp.start()
 
@@ -98,6 +98,12 @@ if __name__ == "__main__":
     # Finalizando os Transaction_Generators:
     for trans_gen in TransGens:
         trans_gen.join()
+
+    time.sleep(3 * time_unit)
+
+    for bank in banks:
+        for j in range(n_proc):
+            bank.queue_sem.release()
 
     # Finalizando os Payment_Processors:
     for pay_proc in PayProcs:
