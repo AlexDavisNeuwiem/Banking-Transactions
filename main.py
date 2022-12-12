@@ -99,8 +99,6 @@ if __name__ == "__main__":
     for trans_gen in TransGens:
         trans_gen.join()
 
-    time.sleep(3 * time_unit)
-
     for bank in banks:
         for j in range(n_proc):
             bank.queue_sem.release()
