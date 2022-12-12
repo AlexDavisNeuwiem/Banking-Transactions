@@ -1,5 +1,5 @@
 import time
-from threading import Thread, Lock, Semaphore
+from threading import Thread, Lock, RLock, Semaphore
 from typing import Tuple
 
 from globals import *
