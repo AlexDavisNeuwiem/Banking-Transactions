@@ -1,6 +1,6 @@
 from random import randint
 import time
-from threading import Thread, Semaphore
+from threading import Thread, Lock, RLock, Semaphore
 
 from globals import *
 from payment_system.bank import Bank
