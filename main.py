@@ -65,8 +65,8 @@ if __name__ == "__main__":
     n_acc = 100
     for i, bank in enumerate(banks):
         for j in range(n_acc):
-            new_balance = randint(1000, 1000000)
-            new_over_lim = randint(1000, 1000000)
+            new_balance = randint(1000, 10000000)
+            new_over_lim = randint(1000, 10000000)
             bank.new_account(new_balance, new_over_lim)
 
     # Criando n_proc Payment_Processors e um Transaction_Generator para cada banco:
