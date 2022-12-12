@@ -54,7 +54,7 @@ class TransactionGenerator(Thread):
             dest_account = banks[destination_bank].accounts[dest_posit]._id
             destination = (destination_bank, dest_account)
 
-            amount = randint(100, 1000000)
+            amount = randint(1000, 1000000)
             new_transaction = Transaction(i, origin, destination, amount, currency=Currency(destination_bank+1))
             banks[self.bank._id].queue_mutex.acquire()
             banks[self.bank._id].transaction_queue.append(new_transaction)
@@ -64,4 +64,3 @@ class TransactionGenerator(Thread):
             time.sleep(0.2 * time_unit)
         
         LOGGER.info(f"O TransactionGenerator {self._id} do banco {self.bank._id} foi finalizado.")
-

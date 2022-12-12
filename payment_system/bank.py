@@ -65,7 +65,7 @@ class Bank():
     def __init__(self, _id: int, currency: Currency):
         self._id                = _id
         self.currency           = currency
-        self.reserves           = CurrencyReserves()
+        self.reserves           = CurrencyReserves(_id)
         self.operating          = True
         self.accounts           = []
 

@@ -7,7 +7,7 @@ banks = []
 debug = False
 
 # Tempo total de simulação
-total_time = 100
+total_time = 50
 
 # Unidade de tempo (quanto menor, mais rápida a simulação)
 time_unit = 1  # 0.1 = 100ms
